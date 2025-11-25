@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>15-Question Quiz</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* General Body */
+      body {
+        margin: 0;
+        font-family: "Playfair Display", sans-serif;
+        background: url(quiz2.jpg) no-repeat center center/cover;
+        background-attachment: fixed;
+        color: #e6eef6;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        text-transform: capitalize;
+        text-align: center;
+        height: 110vh;
+      }
+
+      /* Container & Card */
+      .container {
+        max-width: 800px;
+        width: 100%;
+      }
+      .card {
+        background: linear-gradient(
+          45deg,
+          rgba(5, 97, 134, 0.566),
+          rgba(29, 72, 86, 0),
+          #000
+        );
+        padding: 35px;
+        border-radius: 10px;
+        outline: 3px solid rgb(3, 4, 117);
+      }
+
+      /* Progress Bar */
+      .progress {
+        height: 10px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      .progress i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: rgb(6, 61, 172);
+      }
+
+      /* Question */
+      .question {
+        font-size: 25px;
+        margin: 10px 0;
+      }
+
+      /* Choices Grid */
+      .choices {
+        display: grid;
+        gap: 15px;
+      }
+      button {
+        font-family: "Playfair Display", sans-serif;
+        word-spacing: 2px;
+        letter-spacing: 1px;
+      }
+      /* Buttons & Choice Buttons */
+      .choice,
+      #prev,
+      #next,
+      #submit,
+      #retry {
+        position: relative;
+        z-index: 0;
+        cursor: pointer;
+        padding: 20px 15px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 900;
+        font-size: 28px;
+        color: rgb(255, 255, 255);
+        background: #03051a;
+        overflow: hidden;
+        text-align: center;
+        transition: all 0.2s ease;
+      }
+
+      /* Glow Background */
+      .choice::before,
+      #prev::before,
+      #next::before,
+      #submit::before,
+      #retry::before {
+        content: "";
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        width: calc(100% + 10px);
+        height: calc(100% + 10px);
+        background: linear-gradient(
+          45deg,
+          #0000ff69,
+          rgba(0, 0, 0, 0.466),
+          rgba(255, 255, 255, 0.587),
+          rgba(0, 80, 178, 0.621),
+          rgb(78, 78, 123),
+          rgb(114, 3, 3)
+        );
+        background-size: 800%;
+        filter: blur(15px);
+        border-radius: 12px;
+        z-index: -1;
+        animation: glowing 15s linear infinite;
+      }
+
+      /* Overlay to darken button */
+      .choice::after,
+      #prev::after,
+      #next::after,
+      #submit::after,
+      #retry::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.452
+        ); /* make it slightly transparent */
+        border-radius: 10px;
+        z-index: -1;
+      }
+
+      /* Hover & Active Effects */
+      .choice:hover,
+      #prev:hover,
+      #next:hover,
+      #submit:hover,
+      #retry:hover {
+        transform: translateY(-3px);
+      }
+      .choice:active,
+      #prev:active,
+      #next:active,
+      #submit:active {
+        background: linear-gradient(
+          45deg,
+          rgb(255, 255, 255),
+          rgb(255, 255, 255),
+          #ffffff,
+          black
+        );
+      }
+      #retry {
+        font-size: 35px;
+      }
+      .choice.selected {
+        border-color: #06b6d4;
+      }
+
+      /* Glow Animation Keyframes */
+      @keyframes glowing {
+        0% {
+          background-position: 0 0;
+        }
+        50% {
+          background-position: 400% 0;
+        }
+        100% {
+          background-position: 0 0;
+        }
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+      }
+
+      /* Individual Buttons */
+      #prev,
+      #next,
+      #submit {
+        color: rgb(255, 255, 255);
+      }
+
+      /* Small Text & Result Box */
+      .small {
+        font-size: 25px;
+        color: #94a3b8;
+      }
+      .result {
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-top: 12px;
+      }
+      audio {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Qestions à choix multiples (QSM)</h1>
+        <div class="meta" style="font-size: 35px">preparer ton reponses</div>
+        <div class="small" style="font-size: 35px">
+          High score: <span id="highscore">0</span>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="progress"><i id="prog"></i></div>
+
+        <div id="quiz-area">
+          <div id="qnum" class="small">
+            Question <span id="current">1</span> / 15
+          </div>
+          <div id="question" class="question"></div>
+          <div id="choices" class="choices"></div>
+
+          <div class="controls">
+            <button id="prev">◀ Avant</button>
+            <button id="next">Apres ▶</button>
+            <button id="submit">soumettre</button>
+          </div>
+        </div>
+
+        <div id="result" class="result" style="display: none"></div>
+      </section>
+    </main>
+
+    <script src="script.js">
+      console.log("hello mate");
+
+      // load score OR create a new one
+      let score = JSON.parse(localStorage.getItem("message")) || {
+        wins: 0,
+        losses: 0,
+        ties: 0,
+      };
+
+      // destructure
+      let { wins, losses, ties } = score;
+
+      function pickComputerMove() {
+        const random = Math.random();
+        if (random < 1 / 3) return "rock";
+        else if (random < 2 / 3) return "paper";
+        else return "scissors";
+      }
+
+      function playGame(playerMove) {
+        playerMove = playerMove.toLowerCase();
+        const botMove = pickComputerMove();
+
+        let result = "";
+        if (playerMove === "rock") {
+          if (botMove === "rock") result = "tie";
+          else if (botMove === "paper") result = "you lost mate";
+          else result = "congratulation you won";
+        } else if (playerMove === "paper") {
+          if (botMove === "rock") result = "congratulation you won";
+          else if (botMove === "paper") result = "tie";
+          else result = "you lost mate";
+        } else if (playerMove === "scissors") {
+          if (botMove === "rock") result = "you lost mate";
+          else if (botMove === "paper") result = "congratulation you won";
+          else result = "tie";
+        }
+
+        // update destructured values
+        if (result === "congratulation you won") wins++;
+        else if (result === "you lost mate") losses++;
+        else ties++;
+
+        // update the score object from destructured values
+        score = { wins, losses, ties };
+
+        // save the current score (not zeros)
+        localStorage.setItem("message", JSON.stringify(score));
+
+        alert(`You picked ${playerMove}.
+      The computer picked ${botMove}.
+      That means: ${result}
+      wins: ${wins}, losses: ${losses}, ties: ${ties}`);
+      }
+
+      function resetButton() {
+        // reset storage and variables
+        const zeroScore = { wins: 0, losses: 0, ties: 0 };
+        localStorage.setItem("message", JSON.stringify(zeroScore));
+        score = zeroScore;
+
+        // update destructured variables so they reflect the reset
+        wins = 0;
+        losses = 0;
+        ties = 0;
+
+        alert("Score reset!");
+      }
+      // ! exercise time
+      const product = {
+        name: "basketball",
+        price: 2095,
+        ["delivery-time"]: "3-days",
+      };
+      let { name, price } = product;
+      price += 5000;
+      price.toFixed(2);
+      console.log(
+        `we have a ${name} and it cost : $${price} ${product["delivery-time"]}`
+      );
+      const product1 = {
+        name: "football",
+        price: 3055,
+      };
+      const product2 = {
+        name: "volleyball",
+        price: 3055,
+      };
+      function comparePrice(product1, product2) {
+        if (product1.price < product2.price) {
+          return product1;
+        } else {
+          return product2;
+        }
+      }
+      console.log(comparePrice(product1, product2));
+      function samePrice(product1,product2){
+        return(
+          product1.name === product1.name && product1.price === product2.price
+        )
+      }
+      console.log(samePrice(product1,product2))
+      console.log('fatine'.repeat(10))
+      const hamada = document.getElementById('ha')
+      if(hamada.classList.contains('true')){
+        true
+      }
+      else{
+        console.log('something is wrong')
+      }
+    </script>
+  </body>
+</html>
